@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Pull updates from upstream (pingdotgg/t3code) and rebase the `my` branch on top.
+# Pull updates from upstream (pingdotgg/t3code) and rebase your `main` on top.
 #
 #   .mytools/sync.sh          — full sync
 #   .mytools/sync.sh status   — show state only, change nothing
@@ -9,8 +9,10 @@ set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
 
-WORK_BRANCH="my"
-BASE_BRANCH="main"
+# `main` is where you work. `upstream-main` is a pristine mirror of upstream
+# that nothing but this script is allowed to touch.
+WORK_BRANCH="main"
+BASE_BRANCH="upstream-main"
 
 c_ok=$'\033[32m'; c_warn=$'\033[33m'; c_err=$'\033[31m'; c_dim=$'\033[2m'; c_off=$'\033[0m'
 say()  { printf '%s\n' "$*"; }
@@ -61,19 +63,19 @@ backup="backup/${WORK_BRANCH}-$(git rev-parse --short "$WORK_BRANCH")"
 git branch -f "$backup" "$WORK_BRANCH"
 ok "Backup created: $backup  ${c_dim}(to undo: git reset --hard $backup)${c_off}"
 
-# --- Step 1: fast-forward main to upstream --------------------------------
+# --- Step 1: fast-forward the mirror to upstream --------------------------
 git checkout --quiet "$BASE_BRANCH"
-git merge --ff-only upstream/main --quiet || die "main could not fast-forward — you have probably committed to main."
+git merge --ff-only upstream/main --quiet || die "$BASE_BRANCH could not fast-forward — you have probably committed to it. It must stay a pristine mirror; work on $WORK_BRANCH instead."
 git push --quiet origin "$BASE_BRANCH"
-ok "main updated (+${behind} commits) and pushed to origin"
+ok "$BASE_BRANCH updated (+${behind} commits) and pushed to origin"
 
-# --- Step 2: rebase my onto main ------------------------------------------
+# --- Step 2: rebase your work onto the mirror ------------------------------
 git checkout --quiet "$WORK_BRANCH"
 
 if [ "$mine" -eq 0 ]; then
   git merge --ff-only "$BASE_BRANCH" --quiet
   git push --quiet --force-with-lease origin "$WORK_BRANCH"
-  ok "my updated (you have no personal commits yet)"
+  ok "$WORK_BRANCH updated (you have no personal commits yet)"
   exit 0
 fi
 
@@ -107,7 +109,7 @@ else
 fi
 
 git push --force-with-lease origin "$WORK_BRANCH"
-ok "my branch pushed to origin"
+ok "$WORK_BRANCH pushed to origin"
 
 # --- Step 3: dependency check ---------------------------------------------
 say ""
