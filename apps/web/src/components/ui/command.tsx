@@ -160,7 +160,11 @@ function CommandGroupLabel({
   ...props
 }: React.ComponentProps<typeof AutocompleteGroupLabel>) {
   return (
-    <AutocompleteGroupLabel className={className} data-slot="command-group-label" {...props} />
+    <AutocompleteGroupLabel
+      className={cn("px-3", className)}
+      data-slot="command-group-label"
+      {...props}
+    />
   );
 }
 
@@ -171,8 +175,10 @@ function CommandCollection({ ...props }: React.ComponentProps<typeof Autocomplet
 function CommandItem({ className, ...props }: React.ComponentProps<typeof AutocompleteItem>) {
   return (
     <AutocompleteItem
+      // px-3 puts row content on the same 20px inline edge as the search icon
+      // and the footer, so the whole palette reads as one column.
       className={cn(
-        "py-1.5 data-selected:bg-foreground/[0.06] data-highlighted:bg-foreground/[0.09] data-highlighted:text-foreground [&[data-highlighted][data-selected]]:bg-foreground/[0.09] [&[data-highlighted][data-selected]]:text-foreground",
+        "px-3 py-1.5 data-selected:bg-foreground/[0.06] data-highlighted:bg-foreground/[0.09] data-highlighted:text-foreground [&[data-highlighted][data-selected]]:bg-foreground/[0.09] [&[data-highlighted][data-selected]]:text-foreground",
         className,
       )}
       data-slot="command-item"

@@ -43,7 +43,7 @@ export const BranchToolbarEnvironmentSelector = memo(function BranchToolbarEnvir
 
   if (envLocked || onEnvironmentChange === undefined) {
     return (
-      <span className="inline-flex min-w-0 max-w-full items-center gap-1 border border-transparent px-[calc(--spacing(3)-1px)] text-sm font-medium text-muted-foreground/70 sm:text-xs">
+      <span className="inline-flex min-w-0 max-w-full items-center gap-1 border border-transparent px-[calc(--spacing(3)-1px)] text-sm font-medium text-muted-foreground sm:text-xs">
         {activeEnvironment?.isPrimary ? (
           <MonitorIcon className="size-3 shrink-0" />
         ) : (

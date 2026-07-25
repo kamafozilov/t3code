@@ -196,7 +196,7 @@ function JumpHintBadge(props: { label: string }) {
   return (
     <span
       aria-hidden
-      className="pointer-events-none absolute right-1.5 top-1/2 z-10 inline-flex h-5 -translate-y-1/2 items-center rounded-full border border-border/80 bg-background/95 px-1.5 font-mono text-[10px] font-medium tracking-tight text-foreground shadow-sm"
+      className="pointer-events-none absolute end-1.5 top-1/2 z-10 inline-flex h-5 -translate-y-1/2 items-center rounded-full border border-border/80 bg-background/95 px-1.5 font-mono text-2xs font-medium tracking-tight text-foreground shadow-sm"
     >
       {props.label}
     </span>
@@ -244,7 +244,7 @@ function SidebarV2ThreadTooltip({
       align="start"
       sideOffset={4}
       variant="glass"
-      className="max-w-80 text-left whitespace-normal"
+      className="max-w-80 text-start whitespace-normal [&_[data-slot=tooltip-viewport]]:p-0"
     >
       <div className="flex min-w-0 max-w-80 flex-col gap-2 px-0.5 py-1.5">
         <div className="min-w-0 truncate text-xs leading-none font-medium text-foreground">
@@ -326,7 +326,7 @@ function SnoozePopoverButton(props: {
             aria-label="Snooze thread"
             onClick={(event) => event.stopPropagation()}
             onDoubleClick={(event) => event.stopPropagation()}
-            className="inline-flex h-full cursor-pointer items-center gap-0.5 rounded-md bg-transparent px-1.5 text-xs text-muted-foreground hover:text-foreground"
+            className="inline-flex aspect-square h-full cursor-pointer items-center justify-center rounded-md bg-transparent text-xs text-muted-foreground hover:text-foreground"
           />
         }
       >
@@ -342,10 +342,10 @@ function SnoozePopoverButton(props: {
               onOpenChange(false);
               onSnooze(preset);
             }}
-            className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs text-foreground/90 hover:bg-accent hover:text-foreground"
+            className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-start text-xs text-foreground/90 hover:bg-accent hover:text-foreground"
           >
             <span className="flex-1">{preset.label}</span>
-            <span className="font-mono text-[10px] text-muted-foreground/60 tabular-nums">
+            <span className="font-mono text-2xs text-caption-foreground tabular-nums">
               {preset.whenLabel}
             </span>
           </button>
@@ -452,38 +452,37 @@ const SidebarV2Row = memo(function SidebarV2Row(props: {
       ? {
           label: "Working",
           icon: "working" as const,
-          className:
-            "animate-sidebar-working-text text-sky-600 motion-reduce:animate-none dark:text-sky-400",
+          className: "animate-sidebar-working-text text-info-foreground motion-reduce:animate-none",
         }
       : status === "approval"
         ? {
             label: "Approval",
             icon: null,
-            className: "text-amber-700 dark:text-amber-300",
+            className: "text-warning-foreground",
           }
         : status === "input"
           ? {
               label: "Input",
               icon: null,
-              className: "text-indigo-600 dark:text-indigo-300",
+              className: "text-pending-foreground",
             }
           : status === "failed"
             ? {
                 label: "Failed",
                 icon: null,
-                className: "text-red-700 dark:text-red-300",
+                className: "text-destructive-foreground",
               }
             : isWoke
               ? {
                   label: "Woke",
                   icon: "woke" as const,
-                  className: "text-amber-700 dark:text-amber-300",
+                  className: "text-warning-foreground",
                 }
               : isUnread
                 ? {
                     label: "Done",
                     icon: "done" as const,
-                    className: "text-emerald-700 dark:text-emerald-300",
+                    className: "text-success-foreground",
                   }
                 : null;
 
@@ -554,14 +553,24 @@ const SidebarV2Row = memo(function SidebarV2Row(props: {
     },
     [onContextMenu, threadRef],
   );
-  const handleKeyDown = useCallback(
-    (event: ReactKeyboardEvent) => {
-      if (event.target !== event.currentTarget) return;
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      onThreadActivate(threadRef);
-    },
-    [onThreadActivate, threadRef],
+  const handleActivate = useCallback(() => {
+    onThreadActivate(threadRef);
+  }, [onThreadActivate, threadRef]);
+  /**
+   * The row itself cannot be `role="button"`: it contains its own buttons (PR
+   * link, settle, snooze), and a button role forces its children to be
+   * presentational, so assistive tech flattens them away. Instead the row stays
+   * a plain container for mouse interaction and this overlay carries the row's
+   * own operability. `pointer-events-none` keeps every mouse path byte-identical
+   * to before — the overlay is reachable by Tab and Enter/Space only.
+   */
+  const activateOverlay = (
+    <button
+      type="button"
+      aria-label={thread.title}
+      onClick={handleActivate}
+      className="pointer-events-none absolute inset-0 z-20 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+    />
   );
   const handleDoubleClick = useCallback(
     (event: ReactMouseEvent) => {
@@ -656,13 +665,13 @@ const SidebarV2Row = memo(function SidebarV2Row(props: {
   // a useful hierarchy nor a reliable hover cue. Status now lives in the row
   // content; surface is reserved for interaction (hover, multi-select, route).
   const rowSurfaceClassName = cn(
-    "group/v2-row relative w-full cursor-pointer overflow-hidden rounded-md text-left outline-none select-none",
+    "group/v2-row relative w-full cursor-pointer overflow-hidden rounded-md text-start outline-none select-none",
     props.isActive
       ? "bg-sidebar-row-active text-sidebar-foreground"
       : isSelected
         ? "bg-sidebar-row-selected text-sidebar-foreground"
         : shouldRecede
-          ? "text-sidebar-muted-foreground/75 hover:bg-sidebar-row-hover hover:text-sidebar-foreground"
+          ? "text-sidebar-muted-foreground hover:bg-sidebar-row-hover hover:text-sidebar-foreground"
           : "bg-transparent text-sidebar-foreground hover:bg-sidebar-row-hover",
     isInFlight &&
       !props.isActive &&
@@ -681,7 +690,7 @@ const SidebarV2Row = memo(function SidebarV2Row(props: {
       onBlur={handleRenameBlur}
       onClick={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
-      className="min-w-0 flex-1 rounded-sm border border-input bg-card px-1 text-sm font-medium text-card-foreground outline-none focus:border-foreground"
+      className="min-w-0 flex-1 rounded-sm border border-input bg-card px-1 text-base font-medium text-card-foreground outline-none focus:border-foreground sm:text-sm"
     />
   ) : (
     <span
@@ -694,7 +703,7 @@ const SidebarV2Row = memo(function SidebarV2Row(props: {
               isUnread || isWoke
                 ? "text-foreground"
                 : shouldRecede
-                  ? "text-muted-foreground/80"
+                  ? "text-muted-foreground"
                   : status === "failed"
                     ? "text-foreground/95"
                     : "text-foreground/90",
@@ -705,7 +714,7 @@ const SidebarV2Row = memo(function SidebarV2Row(props: {
                 ? "text-foreground"
                 : isUnread
                   ? "text-muted-foreground"
-                  : "text-muted-foreground/70",
+                  : "text-muted-foreground",
             ),
       )}
     >
@@ -722,8 +731,8 @@ const SidebarV2Row = memo(function SidebarV2Row(props: {
           "shrink-0 font-mono text-xs hover:underline",
           variant === "slim" && variantAction === "unsettle"
             ? props.isActive
-              ? "text-muted-foreground/70"
-              : cn("text-muted-foreground/35 transition-colors", settledPrHoverClass)
+              ? "text-muted-foreground"
+              : cn("text-decorative-foreground transition-colors", settledPrHoverClass)
             : prStatus.colorClass,
         )}
         aria-label={prStatus.tooltip}
@@ -742,17 +751,15 @@ const SidebarV2Row = memo(function SidebarV2Row(props: {
           <TooltipTrigger
             render={
               <div
-                role="button"
-                tabIndex={0}
                 data-testid="sidebar-v2-row-slim"
-                className={cn(rowSurfaceClassName, "flex h-9 items-center gap-2.5 px-2.5")}
+                className={cn(rowSurfaceClassName, "flex h-9 items-center gap-2.5 px-2")}
                 onClick={handleClick}
                 onDoubleClick={handleDoubleClick}
-                onKeyDown={handleKeyDown}
                 onContextMenu={handleContextMenu}
               />
             }
           >
+            {activateOverlay}
             {/* Settled history recedes: dimmed favicon at rest, restored on
               hover so the tail stays scannable when you're hunting. */}
             <span
@@ -774,12 +781,12 @@ const SidebarV2Row = memo(function SidebarV2Row(props: {
               remain visible AND clickable while the row is hovered. Only
               the time/jump label yields to the settle affordance. */}
             {prBadge}
-            <span className="relative ml-auto flex h-6 min-w-8 shrink-0 items-center justify-end">
-              <span className="inline-flex justify-end tabular-nums text-muted-foreground/55 transition-opacity group-hover/v2-row:opacity-0">
+            <span className="relative ms-auto flex h-6 min-w-8 shrink-0 items-center justify-end">
+              <span className="inline-flex justify-end tabular-nums text-muted-foreground transition-opacity group-hover/v2-row:opacity-0">
                 {variantAction === "unsnooze" && props.snoozeWakeLabelText !== null ? (
                   // Snoozed rows show when they come BACK, not when they were
                   // last touched — the return ticket is the row's whole story.
-                  <span className="text-xs text-blue-600 tabular-nums dark:text-blue-400">
+                  <span className="text-xs text-info-foreground tabular-nums">
                     {props.snoozeWakeLabelText}
                   </span>
                 ) : isWoke ? (
@@ -788,7 +795,7 @@ const SidebarV2Row = memo(function SidebarV2Row(props: {
                   <span
                     role="status"
                     aria-label="Woke from snooze"
-                    className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-300"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-warning-foreground"
                   >
                     <AlarmClockIcon aria-hidden className="size-3" />
                     Woke
@@ -807,7 +814,7 @@ const SidebarV2Row = memo(function SidebarV2Row(props: {
                     type="button"
                     aria-label="Wake thread now"
                     onClick={handleUnsnoozeClick}
-                    className="absolute inset-y-0 right-0 inline-flex cursor-pointer items-center gap-1 rounded-md bg-transparent px-2 text-xs text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/v2-row:opacity-100"
+                    className="absolute inset-y-0 end-0 inline-flex cursor-pointer items-center gap-1 rounded-md bg-transparent px-2 text-xs text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/v2-row:opacity-100"
                   >
                     <AlarmClockOffIcon className="size-3" />
                   </button>
@@ -826,7 +833,7 @@ const SidebarV2Row = memo(function SidebarV2Row(props: {
                   type="button"
                   aria-label="Settle thread"
                   onClick={handleSettleClick}
-                  className="absolute inset-y-0 right-0 inline-flex cursor-pointer items-center gap-1 rounded-md bg-transparent px-2 text-xs text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/v2-row:opacity-100"
+                  className="absolute inset-y-0 end-0 inline-flex cursor-pointer items-center gap-1 rounded-md bg-transparent px-2 text-xs text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover/v2-row:opacity-100"
                 >
                   <CheckIcon className="size-3" />
                 </button>
@@ -851,18 +858,16 @@ const SidebarV2Row = memo(function SidebarV2Row(props: {
         <TooltipTrigger
           render={
             <div
-              role="button"
-              tabIndex={0}
               data-testid="sidebar-v2-row-card"
               className={rowSurfaceClassName}
               onClick={handleClick}
               onDoubleClick={handleDoubleClick}
-              onKeyDown={handleKeyDown}
               onContextMenu={handleContextMenu}
             />
           }
         >
-          <div className="relative z-10 h-[4.875rem] px-2.5 py-2">
+          {activateOverlay}
+          <div className="relative z-10 h-[4.875rem] px-2 py-2">
             <div className="flex h-5 min-w-0 items-center gap-1.5">
               <ProjectFavicon
                 environmentId={thread.environmentId}
@@ -872,7 +877,7 @@ const SidebarV2Row = memo(function SidebarV2Row(props: {
               {props.projectTitle ? (
                 <span
                   className={cn(
-                    "min-w-0 flex-1 truncate text-xs text-muted-foreground/85",
+                    "min-w-0 flex-1 truncate text-xs text-muted-foreground",
                     shouldRecede ? "font-normal" : "font-medium",
                   )}
                 >
@@ -881,10 +886,10 @@ const SidebarV2Row = memo(function SidebarV2Row(props: {
               ) : (
                 <span className="flex-1" />
               )}
-              <span className="relative ml-auto flex h-5 min-w-8 shrink-0 items-center justify-end pl-1 text-xs">
+              <span className="relative ms-auto flex h-5 min-w-8 shrink-0 items-center justify-end ps-1 text-xs">
                 <span
                   className={cn(
-                    "tabular-nums text-muted-foreground/65 transition-opacity group-hover/v2-row:opacity-0",
+                    "tabular-nums text-muted-foreground transition-opacity group-hover/v2-row:opacity-0",
                     snoozeMenuOpen && "opacity-0",
                   )}
                 >
@@ -946,7 +951,7 @@ const SidebarV2Row = memo(function SidebarV2Row(props: {
               </span>
             </div>
             <div className="mt-1 flex min-w-0">{title}</div>
-            <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground/75">
+            <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
               {thread.branch ? (
                 <span className="min-w-0 flex-1 truncate whitespace-nowrap">{thread.branch}</span>
               ) : (
@@ -955,16 +960,16 @@ const SidebarV2Row = memo(function SidebarV2Row(props: {
               {prBadge}
               {diff ? (
                 <span className="shrink-0 font-mono">
-                  <span className="text-emerald-600 dark:text-emerald-400">+{diff.insertions}</span>{" "}
-                  <span className="text-red-600 dark:text-red-400">−{diff.deletions}</span>
+                  <span className="text-success-foreground">+{diff.insertions}</span>{" "}
+                  <span className="text-destructive-foreground">−{diff.deletions}</span>
                 </span>
               ) : null}
               <span
                 aria-hidden
-                className="pointer-events-none ml-auto inline-flex shrink-0 items-center gap-1"
+                className="pointer-events-none ms-auto inline-flex shrink-0 items-center gap-1"
               >
                 {isRemote ? (
-                  <span className="inline-flex shrink-0 items-center text-sidebar-muted-foreground/70">
+                  <span className="inline-flex shrink-0 items-center text-sidebar-muted-foreground">
                     <ServerIcon aria-hidden className="size-3.5" />
                   </span>
                 ) : null}
@@ -1032,8 +1037,11 @@ export default function SidebarV2() {
       toastManager.add(
         stackedThreadToast({
           type: "error",
-          title: "Failed to copy path",
-          description: error instanceof Error ? error.message : "An error occurred.",
+          title: "Couldn't copy path",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Copying the path didn't go through. Try again.",
         }),
       );
     },
@@ -1287,8 +1295,11 @@ export default function SidebarV2() {
             toastManager.add(
               stackedThreadToast({
                 type: "error",
-                title: `Failed to remove "${project.title}"`,
-                description: error instanceof Error ? error.message : "An error occurred.",
+                title: `Couldn't remove "${project.title}"`,
+                description:
+                  error instanceof Error
+                    ? error.message
+                    : "Removing the project didn't go through. Try again.",
               }),
             );
           }
@@ -1329,8 +1340,11 @@ export default function SidebarV2() {
         toastManager.add(
           stackedThreadToast({
             type: "error",
-            title: "Failed to rename project",
-            description: error instanceof Error ? error.message : "An error occurred.",
+            title: "Couldn't rename project",
+            description:
+              error instanceof Error
+                ? error.message
+                : "Renaming the project didn't go through. Try again.",
           }),
         );
       }
@@ -1629,8 +1643,11 @@ export default function SidebarV2() {
           toastManager.add(
             stackedThreadToast({
               type: "error",
-              title: "Failed to rename thread",
-              description: error instanceof Error ? error.message : "An error occurred.",
+              title: "Couldn't rename thread",
+              description:
+                error instanceof Error
+                  ? error.message
+                  : "Renaming the thread didn't go through. Try again.",
             }),
           );
         }
@@ -1711,8 +1728,11 @@ export default function SidebarV2() {
               toastManager.add(
                 stackedThreadToast({
                   type: "error",
-                  title: "Failed to settle thread",
-                  description: error instanceof Error ? error.message : "An error occurred.",
+                  title: "Couldn't settle thread",
+                  description:
+                    error instanceof Error
+                      ? error.message
+                      : "Settling the thread didn't go through. Try again.",
                 }),
               );
             }
@@ -1739,8 +1759,11 @@ export default function SidebarV2() {
           toastManager.add(
             stackedThreadToast({
               type: "error",
-              title: "Failed to un-settle thread",
-              description: error instanceof Error ? error.message : "An error occurred.",
+              title: "Couldn't un-settle thread",
+              description:
+                error instanceof Error
+                  ? error.message
+                  : "Un-settling the thread didn't go through. Try again.",
             }),
           );
         }
@@ -1757,8 +1780,11 @@ export default function SidebarV2() {
           toastManager.add(
             stackedThreadToast({
               type: "error",
-              title: "Failed to wake thread",
-              description: error instanceof Error ? error.message : "An error occurred.",
+              title: "Couldn't wake thread",
+              description:
+                error instanceof Error
+                  ? error.message
+                  : "Waking the thread didn't go through. Try again.",
             }),
           );
         }
@@ -1790,8 +1816,11 @@ export default function SidebarV2() {
               toastManager.add(
                 stackedThreadToast({
                   type: "error",
-                  title: "Failed to snooze thread",
-                  description: error instanceof Error ? error.message : "An error occurred.",
+                  title: "Couldn't snooze thread",
+                  description:
+                    error instanceof Error
+                      ? error.message
+                      : "Snoozing the thread didn't go through. Try again.",
                 }),
               );
             }
@@ -1941,8 +1970,11 @@ export default function SidebarV2() {
             toastManager.add(
               stackedThreadToast({
                 type: "error",
-                title: "Failed to delete threads",
-                description: error instanceof Error ? error.message : "An error occurred.",
+                title: "Couldn't delete threads",
+                description:
+                  error instanceof Error
+                    ? error.message
+                    : "Deleting the threads didn't go through. Try again.",
               }),
             );
           }
@@ -2055,8 +2087,11 @@ export default function SidebarV2() {
               toastManager.add(
                 stackedThreadToast({
                   type: "error",
-                  title: "Could not create thread",
-                  description: error instanceof Error ? error.message : "An error occurred.",
+                  title: "Couldn't create thread",
+                  description:
+                    error instanceof Error
+                      ? error.message
+                      : "Creating the thread didn't go through. Try again.",
                 }),
               );
             }
@@ -2095,8 +2130,11 @@ export default function SidebarV2() {
               toastManager.add(
                 stackedThreadToast({
                   type: "error",
-                  title: "Failed to delete thread",
-                  description: error instanceof Error ? error.message : "An error occurred.",
+                  title: "Couldn't delete thread",
+                  description:
+                    error instanceof Error
+                      ? error.message
+                      : "Deleting the thread didn't go through. Try again.",
                 }),
               );
               return;
@@ -2480,16 +2518,16 @@ export default function SidebarV2() {
                         onClick={toggleSnoozedShelf}
                         aria-expanded={snoozedShelfExpanded}
                         data-testid="sidebar-v2-snoozed-shelf-toggle"
-                        className="mb-1 mt-3 flex w-full cursor-pointer items-center gap-2 px-2.5 text-left"
+                        className="mb-1 mt-3 flex w-full cursor-pointer items-center gap-2 px-2 text-start"
                       >
-                        <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                        <span className="text-xs font-medium text-info-foreground">
                           {snoozedShelfExpanded ? "Snoozed" : `Snoozed (${snoozedThreads.length})`}
                         </span>
-                        <span className="h-px flex-1 bg-blue-500/20 dark:bg-blue-400/15" />
+                        <span className="h-px flex-1 bg-info/20" />
                         <ChevronDownIcon
                           aria-hidden
                           className={cn(
-                            "size-3 text-blue-600 transition-transform dark:text-blue-400",
+                            "size-3 text-info-foreground transition-transform",
                             snoozedShelfExpanded && "rotate-180",
                           )}
                         />
@@ -2508,16 +2546,16 @@ export default function SidebarV2() {
                         onClick={toggleSettledShelf}
                         aria-expanded={settledShelfExpanded}
                         data-testid="sidebar-v2-settled-shelf-toggle"
-                        className="mb-1 mt-3 flex w-full cursor-pointer items-center gap-2 px-2.5 text-left"
+                        className="mb-1 mt-3 flex w-full cursor-pointer items-center gap-2 px-2 text-start"
                       >
-                        <span className="text-xs font-medium text-muted-foreground/50">
+                        <span className="text-xs font-medium text-muted-foreground">
                           {settledShelfExpanded ? "Settled" : `Settled (${settledThreads.length})`}
                         </span>
                         <span className="h-px flex-1 bg-sidebar-border/60" />
                         <ChevronDownIcon
                           aria-hidden
                           className={cn(
-                            "size-3 text-muted-foreground/50 transition-transform",
+                            "size-3 text-muted-foreground opacity-50 transition-transform",
                             settledShelfExpanded && "rotate-180",
                           )}
                         />
@@ -2545,14 +2583,14 @@ export default function SidebarV2() {
             </ul>
           </TooltipProvider>
           {activeThreads.length + snoozedThreads.length + settledThreads.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 px-2 py-6 text-center text-xs text-muted-foreground/60">
+            <div className="flex flex-col items-center gap-2 px-2 py-6 text-center text-xs text-muted-foreground">
               {projects.length === 0 ? (
                 <>
                   <span>No projects yet</span>
                   <button
                     type="button"
                     onClick={openAddProjectCommandPalette}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-sidebar-border px-2.5 py-1 text-[11px] font-medium text-sidebar-muted-foreground transition-colors hover:bg-sidebar-row-hover hover:text-sidebar-foreground"
+                    className="inline-flex items-center gap-1.5 rounded-md border border-sidebar-border px-2.5 py-1 text-2xs font-medium text-sidebar-muted-foreground transition-colors hover:bg-sidebar-row-hover hover:text-sidebar-foreground"
                   >
                     <PlusIcon className="-mx-0.5 size-3" />
                     Add project

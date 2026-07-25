@@ -26,10 +26,10 @@ function describeUnavailableInstance(entry: ProviderInstanceEntry): string {
 }
 
 const SELECTED_INDICATOR_CLASS =
-  "pointer-events-none absolute -right-1 top-1/2 z-10 h-5 w-0.75 -translate-y-1/2 rounded-l-full bg-primary";
+  "pointer-events-none absolute -end-1 top-1/2 z-10 h-5 w-0.75 -translate-y-1/2 rounded-s-full bg-primary";
 const BADGE_BASE_CLASS =
-  "pointer-events-none absolute -right-0.5 top-0.5 z-10 flex size-3.5 items-center justify-center rounded-full bg-transparent shadow-sm ";
-const NEW_BADGE_CLASS = `${BADGE_BASE_CLASS} text-amber-600  dark:text-amber-300 `;
+  "pointer-events-none absolute -end-0.5 top-0.5 z-10 flex size-3.5 items-center justify-center rounded-full bg-transparent shadow-sm ";
+const NEW_BADGE_CLASS = `${BADGE_BASE_CLASS} text-warning-foreground`;
 
 /** Opens toward the rail so the list stays readable (not over the model names). */
 const PICKER_TOOLTIP_SIDE = "left" as const;
@@ -97,7 +97,7 @@ export const ModelPickerSidebar = memo(function ModelPickerSidebar(props: {
               data-model-picker-selected-indicator="true"
               className={cn(
                 SELECTED_INDICATOR_CLASS,
-                "right-0 translate-y-0 transition-[top] duration-200 ease-out",
+                "end-0 translate-y-0 transition-[top] duration-200 ease-out",
               )}
               style={{ top: selectedIndicatorTop }}
             />
@@ -194,9 +194,7 @@ export const ModelPickerSidebar = memo(function ModelPickerSidebar(props: {
                         ? "var(--background)"
                         : "color-mix(in oklab, var(--muted) 30%, transparent)"
                   }
-                  {...(entry.accentColor
-                    ? { badgeClassName: "h-3 min-w-3 px-0.5 text-[7px]" }
-                    : {})}
+                  {...(entry.accentColor ? { badgeClassName: "h-3 min-w-3 px-0.5" } : {})}
                 />
                 {showNewBadge ? (
                   <span className={NEW_BADGE_CLASS} aria-hidden>

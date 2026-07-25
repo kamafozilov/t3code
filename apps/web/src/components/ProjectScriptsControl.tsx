@@ -347,7 +347,7 @@ export default function ProjectScriptsControl({
               }
             >
               <ScriptIcon icon={primaryScript.icon} />
-              <span className="sr-only @3xl/header-actions:not-sr-only @3xl/header-actions:ml-0.5">
+              <span className="sr-only @3xl/header-actions:not-sr-only @3xl/header-actions:ms-0.5">
                 {primaryScript.name}
               </span>
             </TooltipTrigger>
@@ -390,7 +390,7 @@ export default function ProjectScriptsControl({
                         type="button"
                         variant="ghost"
                         size="icon-xs"
-                        className="absolute right-0 top-1/2 size-6 -translate-y-1/2 opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 group-hover:pointer-events-auto group-focus-visible:opacity-100 group-focus-visible:pointer-events-auto"
+                        className="absolute end-0 top-1/2 size-6 -translate-y-1/2 opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 group-hover:pointer-events-auto group-focus-visible:opacity-100 group-focus-visible:pointer-events-auto"
                         aria-label={`Edit ${script.name}`}
                         onPointerDown={(event) => {
                           event.preventDefault();
@@ -424,7 +424,7 @@ export default function ProjectScriptsControl({
         >
           <MenuTrigger render={<Button size="xs" variant="outline" aria-label="Project actions" />}>
             <PlusIcon className="size-3.5" />
-            <span className="sr-only @3xl/header-actions:not-sr-only @3xl/header-actions:ml-0.5">
+            <span className="sr-only @3xl/header-actions:not-sr-only @3xl/header-actions:ms-0.5">
               Add action
             </span>
             <ChevronDownIcon className="size-3.5" />
@@ -445,7 +445,7 @@ export default function ProjectScriptsControl({
             }
           >
             <PlusIcon className="size-3.5" />
-            <span className="sr-only @3xl/header-actions:not-sr-only @3xl/header-actions:ml-0.5">
+            <span className="sr-only @3xl/header-actions:not-sr-only @3xl/header-actions:ms-0.5">
               Add action
             </span>
           </TooltipTrigger>
@@ -595,7 +595,7 @@ export default function ProjectScriptsControl({
               <Button
                 type="button"
                 variant="destructive-outline"
-                className="mr-auto"
+                className="me-auto"
                 onClick={() => setDeleteConfirmOpen(true)}
               >
                 Delete

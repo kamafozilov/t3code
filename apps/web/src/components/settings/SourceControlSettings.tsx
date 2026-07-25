@@ -143,10 +143,10 @@ function SourceControlItemMark({
 
   return (
     <span className="relative inline-flex size-5 shrink-0 items-center justify-center">
-      <Icon className="size-4.5 text-foreground/80" aria-hidden />
+      <Icon className="size-4.5 text-foreground opacity-80" aria-hidden />
       <span
         className={cn(
-          "pointer-events-none absolute -left-0.5 -top-0.5 size-2 rounded-full ring-2 ring-background",
+          "pointer-events-none absolute -start-0.5 -top-0.5 size-2 rounded-full ring-2 ring-background",
           dotClassName,
         )}
         aria-hidden
@@ -202,7 +202,7 @@ function itemSummary({
     }
     return (
       <span>
-        Could not verify {item.label}. {item.installHint}
+        Couldn&apos;t verify {item.label}. {item.installHint}
       </span>
     );
   }
@@ -254,7 +254,7 @@ function DiscoveryItemRow({
                 </Badge>
               ) : null}
             </div>
-            <p className="flex min-w-0 flex-wrap items-center gap-x-1 text-[13px] leading-[1.45] text-muted-foreground/80">
+            <p className="flex min-w-0 flex-wrap items-center gap-x-1 text-sm leading-[1.45] text-muted-foreground">
               {itemSummary({ item, auth, authAccount })}
             </p>
           </div>
@@ -376,7 +376,7 @@ function SourceControlSectionSkeleton({
                 <span className="relative inline-flex size-5 shrink-0 items-center justify-center">
                   <Skeleton className="size-4.5 rounded-md" />
                   <Skeleton
-                    className="pointer-events-none absolute -left-0.5 -top-0.5 size-2 rounded-full ring-2 ring-background"
+                    className="pointer-events-none absolute -start-0.5 -top-0.5 size-2 rounded-full ring-2 ring-background"
                     aria-hidden
                   />
                 </span>
@@ -415,7 +415,7 @@ function EmptySourceControlDiscovery({
         </EmptyMedia>
         <EmptyHeader>
           <EmptyTitle>
-            {hasError ? "Could not scan the server environment" : "Nothing detected yet"}
+            {hasError ? "Couldn't scan the server environment" : "Nothing detected yet"}
           </EmptyTitle>
           <EmptyDescription>
             {hasError
@@ -481,13 +481,13 @@ export function SourceControlSettingsPanel() {
     <SettingsPageContainer>
       {isInitialScanPending ? (
         <>
-          <SourceControlSectionSkeleton title="Version Control" headerAction={scanButton} />
-          <SourceControlSectionSkeleton title="Source Control Providers" />
+          <SourceControlSectionSkeleton title="Version control" headerAction={scanButton} />
+          <SourceControlSectionSkeleton title="Source control providers" />
         </>
       ) : hasDiscoveryItems ? (
         <>
           {result.versionControlSystems.length > 0 ? (
-            <SettingsSection title="Version Control" headerAction={scanButton}>
+            <SettingsSection title="Version control" headerAction={scanButton}>
               {result.versionControlSystems.map((item) => (
                 <DiscoveryItemRow key={`vcs:${item.kind}`} item={item}>
                   {item.kind === "git" ? <GitFetchIntervalSettings /> : undefined}
@@ -498,7 +498,7 @@ export function SourceControlSettingsPanel() {
 
           {result.sourceControlProviders.length > 0 ? (
             <SettingsSection
-              title="Source Control Providers"
+              title="Source control providers"
               headerAction={result.versionControlSystems.length === 0 ? scanButton : null}
             >
               {result.sourceControlProviders.map((item) => (

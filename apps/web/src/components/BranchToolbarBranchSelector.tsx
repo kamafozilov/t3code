@@ -79,7 +79,7 @@ interface BranchToolbarBranchSelectorProps {
 }
 
 function toBranchActionErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "An error occurred.";
+  return error instanceof Error ? error.message : "That didn't go through. Try again.";
 }
 
 export function BranchToolbarBranchSelector({
@@ -320,9 +320,9 @@ export function BranchToolbarBranchSelector({
   const [isBranchActionPending, startBranchActionTransition] = useTransition();
   const totalBranchCount = branchRefState.data?.totalCount ?? 0;
   const branchStatusText = isInitialBranchesLoadPending
-    ? "Loading refs..."
+    ? "Loading refs…"
     : isFetchingNextPage
-      ? "Loading more refs..."
+      ? "Loading more refs…"
       : hasNextPage
         ? `Showing ${refs.length} of ${totalBranchCount} refs`
         : null;
@@ -344,7 +344,7 @@ export function BranchToolbarBranchSelector({
         toastManager.add(
           stackedThreadToast({
             type: "error",
-            title: "Failed to copy branch name",
+            title: "Couldn't copy branch name",
             description: toBranchActionErrorMessage(error),
           }),
         );
@@ -430,7 +430,7 @@ export function BranchToolbarBranchSelector({
         toastManager.add(
           stackedThreadToast({
             type: "error",
-            title: "Failed to switch ref.",
+            title: "Couldn't switch ref",
             description: toBranchActionErrorMessage(squashAtomCommandFailure(checkoutResult)),
           }),
         );
@@ -466,7 +466,7 @@ export function BranchToolbarBranchSelector({
         toastManager.add(
           stackedThreadToast({
             type: "error",
-            title: "Failed to create and switch ref.",
+            title: "Couldn't create and switch ref",
             description: toBranchActionErrorMessage(squashAtomCommandFailure(createBranchResult)),
           }),
         );
@@ -689,7 +689,7 @@ export function BranchToolbarBranchSelector({
       >
         <div className="flex w-full min-w-0 items-center justify-between gap-2">
           <span className="min-w-0 flex-1 truncate">{itemValue}</span>
-          {badge && <span className="shrink-0 text-[10px] text-muted-foreground/45">{badge}</span>}
+          {badge && <span className="shrink-0 text-2xs text-decorative-foreground">{badge}</span>}
         </div>
       </ComboboxItem>
     );
@@ -724,7 +724,7 @@ export function BranchToolbarBranchSelector({
                   aria-label={branchPrTooltip}
                   onClick={(event) => openPrLink(event, branchPrStatus.url)}
                   className={cn(
-                    "inline-flex shrink-0 items-center gap-0.5 rounded px-1 py-0.5 text-[11px] font-medium tabular-nums transition-colors hover:bg-muted/60",
+                    "inline-flex shrink-0 items-center gap-0.5 rounded px-1 py-0.5 text-2xs font-medium tabular-nums transition-colors hover:bg-muted/60",
                     branchPrStatus.colorClass,
                   )}
                 />
@@ -745,7 +745,7 @@ export function BranchToolbarBranchSelector({
         >
           <ComboboxTrigger
             render={<Button variant="ghost" size="xs" />}
-            className="min-w-0 max-w-full text-muted-foreground/70 hover:text-foreground/80"
+            className="min-w-0 max-w-full text-muted-foreground hover:text-foreground/80"
             disabled={isInitialBranchesLoadPending || isBranchActionPending}
           >
             <GitBranchIcon className="size-3 shrink-0 opacity-70" />
@@ -759,12 +759,12 @@ export function BranchToolbarBranchSelector({
           <div className="relative -translate-y-px border-b border-border/70 pb-1.5 transition-colors focus-within:border-ring">
             <SearchIcon
               aria-hidden="true"
-              className="pointer-events-none absolute top-1.5 left-0 size-4 shrink-0 text-muted-foreground/55"
+              className="pointer-events-none absolute top-1.5 start-0 size-4 shrink-0 text-muted-foreground opacity-55"
             />
             <ComboboxInput
               className="[&_input]:h-6.5 [&_input]:ps-5 [&_input]:font-sans [&_input]:leading-6.5"
               inputClassName="rounded-none bg-transparent text-sm"
-              placeholder="Search refs..."
+              placeholder="Search refs…"
               showTrigger={false}
               size="sm"
               unstyled
@@ -774,7 +774,22 @@ export function BranchToolbarBranchSelector({
           </div>
         </div>
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <ComboboxEmpty>No refs found.</ComboboxEmpty>
+          <ComboboxEmpty>
+            {branchQuery.trim().length > 0 ? (
+              <span className="flex flex-col items-center gap-1">
+                <span>No refs match “{branchQuery.trim()}”.</span>
+                <button
+                  type="button"
+                  className="underline underline-offset-2"
+                  onClick={() => setBranchQuery("")}
+                >
+                  Clear search
+                </button>
+              </span>
+            ) : (
+              "No refs in this repository yet. Type a name to create one."
+            )}
+          </ComboboxEmpty>
           <div className="relative min-h-0 w-full max-h-56 flex-1 overflow-hidden">
             <ComboboxListVirtualized className="size-full min-w-0 p-0">
               <LegendList<string>
