@@ -12,6 +12,8 @@ import type {
   ProjectSearchEntriesResult,
 } from "@t3tools/contracts";
 
+import * as WorkspaceSymlinks from "./workspaceSymlinks.ts";
+
 const WORKSPACE_INDEX_MAX_ENTRIES = 25_000;
 const WORKSPACE_INDEX_PAGE_SIZE = WORKSPACE_INDEX_MAX_ENTRIES + 2;
 const WORKSPACE_INDEX_SCAN_TIMEOUT = "15 seconds";
@@ -255,6 +257,10 @@ export const make = Effect.fn("WorkspaceSearchIndex.make")(function* (cwd: strin
     return result.value;
   });
 
+  const symlinks = yield* WorkspaceSymlinks.make(cwd);
+  const listing = () => runMixedSearch("", WORKSPACE_INDEX_PAGE_SIZE);
+  yield* symlinks.resweepFrom(listing);
+
   const refresh: WorkspaceSearchIndex["Service"]["refresh"] = Effect.fn(
     "WorkspaceSearchIndex.refresh",
   )(function* () {
@@ -283,13 +289,15 @@ export const make = Effect.fn("WorkspaceSearchIndex.make")(function* (cwd: strin
           cause,
         }),
     );
+    yield* symlinks.resweepFrom(listing);
   });
 
   const list: WorkspaceSearchIndex["Service"]["list"] = Effect.fn("WorkspaceSearchIndex.list")(
     function* () {
       const result = yield* runMixedSearch("", WORKSPACE_INDEX_PAGE_SIZE);
       const mapped = mapMixedSearchResult(result, WORKSPACE_INDEX_MAX_ENTRIES);
-      const sortedEntries = withDirectoryAncestors(mapped.entries).toSorted((left, right) =>
+      const merged = symlinks.mergeIntoList(mapped.entries, yield* symlinks.resweep(result));
+      const sortedEntries = withDirectoryAncestors(merged).toSorted((left, right) =>
         left.path.localeCompare(right.path),
       );
       const entries = sortedEntries.slice(0, WORKSPACE_INDEX_MAX_ENTRIES);
@@ -304,7 +312,7 @@ export const make = Effect.fn("WorkspaceSearchIndex.make")(function* (cwd: strin
     "WorkspaceSearchIndex.search",
   )(function* (query, limit) {
     const result = yield* runMixedSearch(query, Math.max(1, limit + 1));
-    return mapMixedSearchResult(result, limit);
+    return yield* symlinks.mergeIntoSearch(mapMixedSearchResult(result, limit), query, limit);
   });
 
   return WorkspaceSearchIndex.of({ list, refresh, search });
