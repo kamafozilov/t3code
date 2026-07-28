@@ -13,6 +13,7 @@ import {
   XIcon,
 } from "lucide-react";
 import {
+  type ClientSettings,
   type ResolvedKeybindingsConfig,
   type ScopedThreadRef,
   type ThreadId,
@@ -34,6 +35,8 @@ import { Popover, PopoverPopup, PopoverTrigger } from "~/components/ui/popover";
 import { writeTextToClipboard } from "~/hooks/useCopyToClipboard";
 import { cn } from "~/lib/utils";
 import { type TerminalContextSelection } from "~/lib/terminalContext";
+import { terminalFontFamilyForOverride } from "~/lib/terminalFont";
+import { useClientSettings } from "~/hooks/useSettings";
 import { useOpenInPreferredEditor } from "../editorPreferences";
 import {
   collectWrappedTerminalLinkLine,
@@ -66,6 +69,9 @@ import { previewEnvironment } from "../state/preview";
 import { terminalEnvironment } from "../state/terminal";
 import { openTerminalLinkInPreview } from "./preview/openTerminalLinkInPreview";
 import { useAtomCommand } from "../state/use-atom-command";
+
+const selectTerminalFontFamily = (settings: ClientSettings) => settings.terminalFontFamily;
+const selectTerminalFontSize = (settings: ClientSettings) => settings.terminalFontSize;
 
 const MIN_DRAWER_HEIGHT = 180;
 const MAX_DRAWER_HEIGHT_RATIO = 0.75;
@@ -342,6 +348,16 @@ export function TerminalViewport({
     onAddTerminalContext(selection);
   });
   const readTerminalLabel = useEffectEvent(() => terminalLabel);
+  const terminalFontOverride = useClientSettings(selectTerminalFontFamily);
+  const terminalFontSize = useClientSettings(selectTerminalFontSize);
+  const terminalFontFamily = useMemo(
+    () => terminalFontFamilyForOverride(terminalFontOverride),
+    [terminalFontOverride],
+  );
+  const readTerminalFont = useEffectEvent(() => ({
+    fontFamily: terminalFontFamily,
+    fontSize: terminalFontSize,
+  }));
   const terminalSession = useAttachedTerminalSession({
     environmentId,
     terminal: {
@@ -386,13 +402,13 @@ export function TerminalViewport({
     const localApi = readLocalApi();
 
     const fitAddon = new FitAddon();
+    const mountFont = readTerminalFont();
     const terminal = new Terminal({
       cursorBlink: true,
       lineHeight: 1,
-      fontSize: 12,
+      fontSize: mountFont.fontSize,
       scrollback: 5_000,
-      fontFamily:
-        '"SF Mono", "SFMono-Regular", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, monospace',
+      fontFamily: mountFont.fontFamily,
       theme: terminalThemeFromApp(mount),
     });
     terminal.loadAddon(fitAddon);
@@ -823,6 +839,35 @@ export function TerminalViewport({
       window.cancelAnimationFrame(frame);
     };
   }, [drawerHeight, environmentId, resizeEpoch, terminalId, threadId]);
+
+  // Font changes alter cell metrics, so the grid has to be re-fit and the pty
+  // told about the new size. Mount already applied these values; the equality
+  // check keeps this effect from firing a redundant resize on every remount.
+  useEffect(() => {
+    const terminal = terminalRef.current;
+    const fitAddon = fitAddonRef.current;
+    if (!terminal || !fitAddon) return;
+    if (
+      terminal.options.fontFamily === terminalFontFamily &&
+      terminal.options.fontSize === terminalFontSize
+    ) {
+      return;
+    }
+    terminal.options.fontFamily = terminalFontFamily;
+    terminal.options.fontSize = terminalFontSize;
+    const wasAtBottom = terminal.buffer.active.viewportY >= terminal.buffer.active.baseY;
+    const frame = window.requestAnimationFrame(() => {
+      fitTerminalSafely(fitAddon);
+      if (wasAtBottom) {
+        terminal.scrollToBottom();
+      }
+      void resizeTerminal(terminal.cols, terminal.rows);
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [terminalFontFamily, terminalFontSize]);
+
   return (
     <div
       ref={containerRef}

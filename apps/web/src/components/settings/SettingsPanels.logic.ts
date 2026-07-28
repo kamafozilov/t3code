@@ -6,7 +6,22 @@ import type {
   SidebarProjectGroupingMode,
   UnifiedSettings,
 } from "@t3tools/contracts";
-import { DEFAULT_UNIFIED_SETTINGS } from "@t3tools/contracts/settings";
+import {
+  DEFAULT_UNIFIED_SETTINGS,
+  MAX_TERMINAL_FONT_SIZE,
+  MIN_TERMINAL_FONT_SIZE,
+} from "@t3tools/contracts/settings";
+
+/**
+ * Parses the terminal font size field, or returns `null` when the text is not
+ * a number. Out-of-range values are clamped rather than rejected so typing a
+ * bigger number than the field allows still does something sensible.
+ */
+export function parseTerminalFontSize(value: string): number | null {
+  const parsed = Number.parseInt(value.trim(), 10);
+  if (!Number.isInteger(parsed)) return null;
+  return Math.min(MAX_TERMINAL_FONT_SIZE, Math.max(MIN_TERMINAL_FONT_SIZE, parsed));
+}
 
 export function isProjectGroupingEnabled(mode: SidebarProjectGroupingMode): boolean {
   return mode !== "separate";

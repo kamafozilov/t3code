@@ -25,7 +25,9 @@ import {
   DEFAULT_UNIFIED_SETTINGS,
   type EnvironmentIdentificationMode,
   MAX_GLASS_OPACITY,
+  MAX_TERMINAL_FONT_SIZE,
   MIN_GLASS_OPACITY,
+  MIN_TERMINAL_FONT_SIZE,
 } from "@t3tools/contracts/settings";
 import { createModelSelection } from "@t3tools/shared/model";
 import * as Arr from "effect/Array";
@@ -91,6 +93,7 @@ import {
   buildProviderInstanceUpdatePatch,
   formatDiagnosticsDescription,
   isProjectGroupingEnabled,
+  parseTerminalFontSize,
   projectGroupingModeFromToggle,
   readLastEnabledProjectGroupingMode,
   rememberEnabledProjectGroupingMode,
@@ -429,6 +432,12 @@ export function useSettingsRestore(onRestored?: () => void) {
       DEFAULT_UNIFIED_SETTINGS.environmentIdentificationMode
         ? ["Environment identification"]
         : []),
+      ...(settings.terminalFontFamily !== DEFAULT_UNIFIED_SETTINGS.terminalFontFamily
+        ? ["Terminal font"]
+        : []),
+      ...(settings.terminalFontSize !== DEFAULT_UNIFIED_SETTINGS.terminalFontSize
+        ? ["Terminal font size"]
+        : []),
       ...(settings.timestampFormat !== DEFAULT_UNIFIED_SETTINGS.timestampFormat
         ? ["Time format"]
         : []),
@@ -491,6 +500,8 @@ export function useSettingsRestore(onRestored?: () => void) {
       settings.enableProviderUpdateChecks,
       settings.sidebarProjectGroupingMode,
       settings.sidebarThreadPreviewCount,
+      settings.terminalFontFamily,
+      settings.terminalFontSize,
       settings.timestampFormat,
       settings.wordWrap,
       theme,
@@ -514,6 +525,8 @@ export function useSettingsRestore(onRestored?: () => void) {
       diffIgnoreWhitespace: DEFAULT_UNIFIED_SETTINGS.diffIgnoreWhitespace,
       environmentIdentificationMode: DEFAULT_UNIFIED_SETTINGS.environmentIdentificationMode,
       glassOpacity: DEFAULT_UNIFIED_SETTINGS.glassOpacity,
+      terminalFontFamily: DEFAULT_UNIFIED_SETTINGS.terminalFontFamily,
+      terminalFontSize: DEFAULT_UNIFIED_SETTINGS.terminalFontSize,
       sidebarThreadPreviewCount: DEFAULT_UNIFIED_SETTINGS.sidebarThreadPreviewCount,
       sidebarProjectGroupingMode: DEFAULT_UNIFIED_SETTINGS.sidebarProjectGroupingMode,
       autoOpenPlanSidebar: DEFAULT_UNIFIED_SETTINGS.autoOpenPlanSidebar,
@@ -744,6 +757,71 @@ export function GeneralSettingsPanel() {
   return (
     <SettingsPageContainer>
       <SettingsSection title="General">
+        <SettingsRow
+          title="Terminal font"
+          description={
+            <>
+              Leave empty to detect an installed Nerd Font, or enter exact family names.
+              <span className="mt-1.5 block font-mono text-xs text-foreground/80">
+                JetBrainsMono Nerd Font Mono, MesloLGS NF
+              </span>
+            </>
+          }
+          resetAction={
+            settings.terminalFontFamily !== DEFAULT_UNIFIED_SETTINGS.terminalFontFamily ? (
+              <SettingResetButton
+                label="terminal font"
+                onClick={() =>
+                  updateSettings({
+                    terminalFontFamily: DEFAULT_UNIFIED_SETTINGS.terminalFontFamily,
+                  })
+                }
+              />
+            ) : null
+          }
+          control={
+            <DraftInput
+              className="w-full sm:w-72"
+              value={settings.terminalFontFamily}
+              onCommit={(next) => updateSettings({ terminalFontFamily: next })}
+              placeholder="Detected automatically"
+              spellCheck={false}
+              aria-label="Terminal font family"
+            />
+          }
+        />
+
+        <SettingsRow
+          title="Terminal font size"
+          description={`Point size of terminal text, from ${MIN_TERMINAL_FONT_SIZE} to ${MAX_TERMINAL_FONT_SIZE}.`}
+          resetAction={
+            settings.terminalFontSize !== DEFAULT_UNIFIED_SETTINGS.terminalFontSize ? (
+              <SettingResetButton
+                label="terminal font size"
+                onClick={() =>
+                  updateSettings({ terminalFontSize: DEFAULT_UNIFIED_SETTINGS.terminalFontSize })
+                }
+              />
+            ) : null
+          }
+          control={
+            <DraftInput
+              className="w-full sm:w-24"
+              value={String(settings.terminalFontSize)}
+              onCommit={(next) => {
+                const terminalFontSize = parseTerminalFontSize(next);
+                if (terminalFontSize === null) return;
+                updateSettings({ terminalFontSize });
+              }}
+              inputMode="numeric"
+              max={MAX_TERMINAL_FONT_SIZE}
+              min={MIN_TERMINAL_FONT_SIZE}
+              type="number"
+              aria-label="Terminal font size"
+            />
+          }
+        />
+
         <SettingsRow
           title="Project grouping"
           description="Combine matching repositories across environments."

@@ -9,8 +9,25 @@ import {
   buildProviderInstanceUpdatePatch,
   formatDiagnosticsDescription,
   isProjectGroupingEnabled,
+  parseTerminalFontSize,
   projectGroupingModeFromToggle,
 } from "./SettingsPanels.logic";
+
+describe("terminal font size field", () => {
+  it("accepts an in-range integer", () => {
+    expect(parseTerminalFontSize(" 14 ")).toBe(14);
+  });
+
+  it("clamps values outside the allowed range", () => {
+    expect(parseTerminalFontSize("2")).toBe(8);
+    expect(parseTerminalFontSize("400")).toBe(32);
+  });
+
+  it("rejects text that is not a number", () => {
+    expect(parseTerminalFontSize("")).toBeNull();
+    expect(parseTerminalFontSize("large")).toBeNull();
+  });
+});
 
 describe("project grouping toggle", () => {
   it("enables repository grouping and disables into separate projects", () => {

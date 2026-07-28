@@ -62,6 +62,23 @@ export const EnvironmentIdentificationMode = Schema.Literals(["artwork", "pill",
 export type EnvironmentIdentificationMode = typeof EnvironmentIdentificationMode.Type;
 export const DEFAULT_ENVIRONMENT_IDENTIFICATION_MODE: EnvironmentIdentificationMode = "artwork";
 
+export const MIN_TERMINAL_FONT_SIZE = 8;
+export const MAX_TERMINAL_FONT_SIZE = 32;
+export const TerminalFontSize = Schema.Int.check(
+  Schema.isBetween({
+    minimum: MIN_TERMINAL_FONT_SIZE,
+    maximum: MAX_TERMINAL_FONT_SIZE,
+  }),
+);
+export type TerminalFontSize = typeof TerminalFontSize.Type;
+export const DEFAULT_TERMINAL_FONT_SIZE: TerminalFontSize = 12;
+/**
+ * Empty means "pick a font installed on this machine": the terminal probes for
+ * Nerd Fonts and prepends what it finds, so shell prompts render their glyphs
+ * without any configuration. A non-empty value pins an exact family.
+ */
+export const DEFAULT_TERMINAL_FONT_FAMILY = "";
+
 export const ClientSettingsSchema = Schema.Struct({
   autoOpenPlanSidebar: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
   confirmThreadArchive: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
@@ -127,6 +144,12 @@ export const ClientSettingsSchema = Schema.Struct({
   // there is no way to tell that apart from "left alone", and a channel-derived
   // default could never reach them. Mirrors `updateChannelConfiguredByUser`.
   sidebarV2ConfiguredByUser: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
+  terminalFontFamily: TrimmedString.pipe(
+    Schema.withDecodingDefault(Effect.succeed(DEFAULT_TERMINAL_FONT_FAMILY)),
+  ),
+  terminalFontSize: TerminalFontSize.pipe(
+    Schema.withDecodingDefault(Effect.succeed(DEFAULT_TERMINAL_FONT_SIZE)),
+  ),
   timestampFormat: TimestampFormat.pipe(
     Schema.withDecodingDefault(Effect.succeed(DEFAULT_TIMESTAMP_FORMAT)),
   ),
@@ -650,6 +673,8 @@ export const ClientSettingsPatch = Schema.Struct({
   sidebarThreadPreviewCount: Schema.optionalKey(SidebarThreadPreviewCount),
   sidebarV2Enabled: Schema.optionalKey(Schema.Boolean),
   sidebarV2ConfiguredByUser: Schema.optionalKey(Schema.Boolean),
+  terminalFontFamily: Schema.optionalKey(TrimmedString),
+  terminalFontSize: Schema.optionalKey(TerminalFontSize),
   timestampFormat: Schema.optionalKey(TimestampFormat),
   wordWrap: Schema.optionalKey(Schema.Boolean),
 });

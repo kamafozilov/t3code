@@ -32,6 +32,8 @@ const clientSettings: ClientSettings = {
   sidebarThreadPreviewCount: 6,
   sidebarV2Enabled: false,
   sidebarV2ConfiguredByUser: false,
+  terminalFontFamily: "",
+  terminalFontSize: 12,
   timestampFormat: "24-hour",
   wordWrap: true,
 };
